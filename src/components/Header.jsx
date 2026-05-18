@@ -35,6 +35,9 @@ function Header() {
           <Link to="/destinations" className="nav-link" onClick={() => setIsMenuOpen(false)}>
             Destinations
           </Link>
+          <Link to="/gallery" className="nav-link" onClick={() => setIsMenuOpen(false)}>
+            Photo Gallery
+          </Link>
           <Link to="/blog" className="nav-link" onClick={() => setIsMenuOpen(false)}>
             Blog
           </Link>

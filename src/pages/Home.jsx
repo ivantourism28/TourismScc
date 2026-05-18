@@ -8,10 +8,12 @@ import '../styles/Home.css';
 
 function Home() {
   const { blogPosts, destinations, pageBgs } = useAdmin();
-  const heroBg = pageBgs?.home?.image;
-  const heroStyle = heroBg
-    ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url(${heroBg})` }
-    : {};
+  const heroBg = pageBgs?.home?.image_url;
+  const heroStyle = {
+    backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url(${heroBg || ''})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  };
   const featuredPosts = blogPosts.filter(post => post.featured).slice(0, 3);
   const featuredDestinations = destinations.slice(0, 3);
 
@@ -71,6 +73,17 @@ function Home() {
 
       {/* Gallery Section */}
       <Gallery />
+
+      {/* View All Gallery */}
+      <section className="view-all-gallery">
+        <div className="container">
+          <div className="view-all">
+            <Link to="/gallery" className="btn btn-outline">
+              View All Photos
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Testimonials Section */}
       <TestimonialSection />

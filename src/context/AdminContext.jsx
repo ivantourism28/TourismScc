@@ -1,99 +1,223 @@
-import { createContext, useContext, useState } from 'react';
-import { destinations as seedDestinations, blogPosts as seedBlogPosts } from '../data/touristicData';
+import { createContext, useContext, useState, useEffect } from 'react';
 
-// ── All available images from src/assets ──────────────────────────────────
-import img_alinsyawanfalls   from '../assets/alinsyawanfalls.jpg';
-import img_codcodriceterraces from '../assets/codcodriceterraces.jpg';
-import img_guiobcave         from '../assets/guiobcave.jpg';
-import img_hero              from '../assets/hero.png';
-import img_Image1            from '../assets/Image1.jpg';
-import img_lapuscave         from '../assets/lapuscave.jpg';
-import img_magoonfalls       from '../assets/magoonfalls.jpg';
-import img_mayanapeak        from '../assets/mayanapeak.jpg';
-import img_peoplespark       from '../assets/peoplespark.jpg';
-import img_punodviewdeck     from '../assets/punodviewdeck.jpg';
-import img_sancarloscathedral from '../assets/sancarloscathedral.jpg';
-import img_scclogo1          from '../assets/scclogo1.png';
-import img_sipawayisland     from '../assets/sipawayisland.jpg';
-import img_Tourismlogo       from '../assets/Tourismlogo1.1.png';
-
-// Exported so Admin can show a picker
-export const ASSET_IMAGES = [
-  { name: 'alinsyawanfalls.jpg',    src: img_alinsyawanfalls },
-  { name: 'codcodriceterraces.jpg', src: img_codcodriceterraces },
-  { name: 'guiobcave.jpg',          src: img_guiobcave },
-  { name: 'hero.png',               src: img_hero },
-  { name: 'Image1.jpg',             src: img_Image1 },
-  { name: 'lapuscave.jpg',          src: img_lapuscave },
-  { name: 'magoonfalls.jpg',        src: img_magoonfalls },
-  { name: 'mayanapeak.jpg',         src: img_mayanapeak },
-  { name: 'peoplespark.jpg',        src: img_peoplespark },
-  { name: 'punodviewdeck.jpg',      src: img_punodviewdeck },
-  { name: 'sancarloscathedral.jpg', src: img_sancarloscathedral },
-  { name: 'scclogo1.png',           src: img_scclogo1 },
-  { name: 'sipawayisland.jpg',      src: img_sipawayisland },
-  { name: 'Tourismlogo1.1.png',     src: img_Tourismlogo },
-];
-
-// ── Gallery seed ───────────────────────────────────────────────────────────
-const seedGallery = [
-  { id: 1, title: 'Peoples Park',         url: img_peoplespark },
-  { id: 2, title: 'Alinsyawan Falls',     url: img_alinsyawanfalls },
-  { id: 3, title: 'Punod View Deck',      url: img_punodviewdeck },
-  { id: 4, title: 'Gui-ob Cave',          url: img_guiobcave },
-  { id: 5, title: 'San Carlos Cathedral', url: img_sancarloscathedral },
-  { id: 6, title: 'Magon-On Falls',       url: img_magoonfalls },
-  { id: 7, title: 'Lapus Cave',           url: img_lapuscave },
-  { id: 8, title: 'CodCod Rice Terraces', url: img_codcodriceterraces },
-];
-
-// ── Page backgrounds seed ──────────────────────────────────────────────────
-export const seedPageBgs = {
-  home:         { label: 'Home Hero',           image: img_Image1 },
-  destinations: { label: 'Destinations Header', image: img_mayanapeak },
-  blog:         { label: 'Blog Header',         image: img_alinsyawanfalls },
-  about:        { label: 'About Header',        image: img_peoplespark },
-  contact:      { label: 'Contact Header',      image: img_sancarloscathedral },
-};
-
-// ── Context ────────────────────────────────────────────────────────────────
 const AdminContext = createContext(null);
 
+// Available local assets
+const AVAILABLE_ASSETS = [
+  'alinsyawanfalls.jpg',
+  'Anahaw River and Paliran Falls.jpg',
+  'boulevard.jpg',
+  'Broce Ancestral House.jpeg',
+  'cabagtasantribe.jpg',
+  'centermall.jpg',
+  'cityhall.jpg',
+  'codcodriceterraces.jpg',
+  'ecozone.jpeg',
+  'fountain.jpg',
+  'guiobcave.jpg',
+  'hero.png',
+  'Image1.jpg',
+  'lapuscave.jpg',
+  'magoonfalls.jpg',
+  'Mayana Peak.jpg',
+  'mayanapeak.jpg',
+  'Memorial Tree Park.png',
+  'Monte Agundo Retreat Center.jpg',
+  'Old Sugar Central Compound.png',
+  'Pano-ilan Pottery.png',
+  'park marina.jpg',
+  'peoplespark.jpg',
+  'punodviewdeck.jpg',
+  'San Carlos Chocolatet Hills.jpg',
+  'sancarloscathedral.jpg',
+  'SCBD Nursery.png',
+  'scclogo1.png',
+  'Sebatche Cave.jpg',
+  'sipawayisland.jpg',
+  'Tourismlogo1.1.png',
+];
+
 export function AdminProvider({ children }) {
-  const [destinations, setDestinations] = useState(seedDestinations.map((d) => ({ ...d })));
-  const [blogPosts,    setBlogPosts]    = useState(seedBlogPosts);
-  const [gallery,      setGallery]      = useState(seedGallery);
-  const [pageBgs,      setPageBgs]      = useState(seedPageBgs);
+  const [destinations, setDestinations] = useState([]);
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [gallery, setGallery] = useState([]);
+  const [pageBgs, setPageBgs] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  // ── Destinations CRUD ──────────────────────────────────────────────────
-  function addDestination(item)        { setDestinations((p) => [...p, { ...item, id: Date.now() }]); }
-  function updateDestination(id, item) { setDestinations((p) => p.map((d) => d.id === id ? { ...d, ...item } : d)); }
-  function deleteDestination(id)       { setDestinations((p) => p.filter((d) => d.id !== id)); }
+  // Default page backgrounds structure
+  const DEFAULT_PAGE_BGS = {
+    home: { page_id: 'home', label: 'Home', image_url: null },
+    blog: { page_id: 'blog', label: 'Blog', image_url: null },
+    destinations: { page_id: 'destinations', label: 'Destinations', image_url: null },
+    about: { page_id: 'about', label: 'About', image_url: null },
+    contact: { page_id: 'contact', label: 'Contact', image_url: null },
+  };
 
-  // ── Blog Posts CRUD ────────────────────────────────────────────────────
-  function addBlogPost(item)        { setBlogPosts((p) => [...p, { ...item, id: Date.now() }]); }
-  function updateBlogPost(id, item) { setBlogPosts((p) => p.map((x) => x.id === id ? { ...x, ...item } : x)); }
-  function deleteBlogPost(id)       { setBlogPosts((p) => p.filter((x) => x.id !== id)); }
+  // Load all data from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedDestinations = localStorage.getItem('destinations');
+      const savedBlogPosts = localStorage.getItem('blogPosts');
+      const savedGallery = localStorage.getItem('gallery');
+      const savedPageBgs = localStorage.getItem('pageBgs');
 
-  // ── Gallery CRUD ───────────────────────────────────────────────────────
-  function addGalleryItem(item)        { setGallery((p) => [...p, { ...item, id: Date.now() }]); }
-  function updateGalleryItem(id, item) { setGallery((p) => p.map((g) => g.id === id ? { ...g, ...item } : g)); }
-  function deleteGalleryItem(id)       { setGallery((p) => p.filter((g) => g.id !== id)); }
+      if (savedDestinations) setDestinations(JSON.parse(savedDestinations));
+      if (savedBlogPosts) setBlogPosts(JSON.parse(savedBlogPosts));
+      if (savedGallery) setGallery(JSON.parse(savedGallery));
+      
+      // Initialize pageBgs with defaults if not in localStorage
+      if (savedPageBgs) {
+        setPageBgs(JSON.parse(savedPageBgs));
+      } else {
+        setPageBgs(DEFAULT_PAGE_BGS);
+        localStorage.setItem('pageBgs', JSON.stringify(DEFAULT_PAGE_BGS));
+      }
+    } catch (err) {
+      console.error('Error loading from localStorage:', err);
+      // Set defaults on error
+      setPageBgs(DEFAULT_PAGE_BGS);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // ── Page Backgrounds ───────────────────────────────────────────────────
-  function updatePageBg(pageId, image) {
-    setPageBgs((p) => ({ ...p, [pageId]: { ...p[pageId], image } }));
+  // Destinations CRUD
+  function addDestination(item) {
+    const newItem = {
+      id: Date.now(),
+      name: item.name,
+      location: item.location,
+      description: item.description,
+      image: item.image,
+      activities: Array.isArray(item.activities)
+        ? item.activities
+        : item.activities?.split(',').map(a => a.trim()).filter(Boolean) ?? [],
+      openingHours: item.openingHours,
+      rating: parseFloat(item.rating) || null,
+      lat: parseFloat(item.lat) || null,
+      lng: parseFloat(item.lng) || null,
+    };
+    const updated = [...destinations, newItem];
+    setDestinations(updated);
+    localStorage.setItem('destinations', JSON.stringify(updated));
   }
+
+  function updateDestination(id, item) {
+    const updated = destinations.map(d =>
+      d.id === id ? {
+        ...d,
+        name: item.name,
+        location: item.location,
+        description: item.description,
+        image: item.image,
+        activities: Array.isArray(item.activities)
+          ? item.activities
+          : item.activities?.split(',').map(a => a.trim()).filter(Boolean) ?? [],
+        openingHours: item.openingHours,
+        rating: parseFloat(item.rating) || null,
+        lat: parseFloat(item.lat) || null,
+        lng: parseFloat(item.lng) || null,
+      } : d
+    );
+    setDestinations(updated);
+    localStorage.setItem('destinations', JSON.stringify(updated));
+  }
+
+  function deleteDestination(id) {
+    const updated = destinations.filter(d => d.id !== id);
+    setDestinations(updated);
+    localStorage.setItem('destinations', JSON.stringify(updated));
+  }
+
+  // Blog Posts CRUD
+  function addBlogPost(item) {
+    const newItem = {
+      id: Date.now(),
+      title: item.title,
+      author: item.author,
+      date: item.date || null,
+      category: item.category,
+      excerpt: item.excerpt,
+      content: item.content,
+      image: item.image,
+      featured: !!item.featured,
+    };
+    const updated = [...blogPosts, newItem];
+    setBlogPosts(updated);
+    localStorage.setItem('blogPosts', JSON.stringify(updated));
+  }
+
+  function updateBlogPost(id, item) {
+    const updated = blogPosts.map(p =>
+      p.id === id ? {
+        ...p,
+        title: item.title,
+        author: item.author,
+        date: item.date || null,
+        category: item.category,
+        excerpt: item.excerpt,
+        content: item.content,
+        image: item.image,
+        featured: !!item.featured,
+      } : p
+    );
+    setBlogPosts(updated);
+    localStorage.setItem('blogPosts', JSON.stringify(updated));
+  }
+
+  function deleteBlogPost(id) {
+    const updated = blogPosts.filter(p => p.id !== id);
+    setBlogPosts(updated);
+    localStorage.setItem('blogPosts', JSON.stringify(updated));
+  }
+
+  // Gallery CRUD
+  function addGalleryItem(item) {
+    const newItem = {
+      id: Date.now(),
+      title: item.title,
+      url: item.url,
+    };
+    const updated = [...gallery, newItem];
+    setGallery(updated);
+    localStorage.setItem('gallery', JSON.stringify(updated));
+  }
+
+  function updateGalleryItem(id, item) {
+    const updated = gallery.map(g =>
+      g.id === id ? { ...g, title: item.title, url: item.url } : g
+    );
+    setGallery(updated);
+    localStorage.setItem('gallery', JSON.stringify(updated));
+  }
+
+  function deleteGalleryItem(id) {
+    const updated = gallery.filter(g => g.id !== id);
+    setGallery(updated);
+    localStorage.setItem('gallery', JSON.stringify(updated));
+  }
+
+  // Page Backgrounds
+  function updatePageBg(pageId, imageUrl) {
+    const updated = { ...pageBgs, [pageId]: { ...pageBgs[pageId], image_url: imageUrl } };
+    setPageBgs(updated);
+    localStorage.setItem('pageBgs', JSON.stringify(updated));
+  }
+
   function resetPageBg(pageId) {
-    setPageBgs((p) => ({ ...p, [pageId]: { ...p[pageId], image: seedPageBgs[pageId]?.image ?? '' } }));
+    const updated = { ...pageBgs, [pageId]: { ...pageBgs[pageId], image_url: null } };
+    setPageBgs(updated);
+    localStorage.setItem('pageBgs', JSON.stringify(updated));
   }
 
   return (
     <AdminContext.Provider value={{
+      loading,
       destinations, addDestination, updateDestination, deleteDestination,
-      blogPosts,    addBlogPost,    updateBlogPost,    deleteBlogPost,
-      gallery,      addGalleryItem, updateGalleryItem, deleteGalleryItem,
-      pageBgs,      updatePageBg,   resetPageBg,
+      blogPosts, addBlogPost, updateBlogPost, deleteBlogPost,
+      gallery, addGalleryItem, updateGalleryItem, deleteGalleryItem,
+      pageBgs, updatePageBg, resetPageBg,
+      availableAssets: AVAILABLE_ASSETS,
     }}>
       {children}
     </AdminContext.Provider>

@@ -1,72 +1,100 @@
 import { useState } from 'react';
-import { useAdmin, ASSET_IMAGES } from '../context/AdminContext';
+import { useAdmin } from '../context/AdminContext';
 import '../styles/Admin.css';
 
-// ─── Asset Picker ─────────────────────────────────────────────────────────────
-// Type a filename to filter, or browse the grid. Resolves to the Vite-imported src URL.
-function AssetPicker({ value, onChange, label = 'Image' }) {
-  const [query, setQuery]   = useState('');
-  const [open,  setOpen]    = useState(false);
+// ─── Asset Picker Input ───────────────────────────────────────────────────────
+function ImageInput({ value, onChange, label = 'Image' }) {
+  const { availableAssets } = useAdmin();
+  const [showPicker, setShowPicker] = useState(false);
 
-  const selected = ASSET_IMAGES.find((a) => a.src === value);
-
-  const filtered = query.trim()
-    ? ASSET_IMAGES.filter((a) => a.name.toLowerCase().includes(query.toLowerCase()))
-    : ASSET_IMAGES;
-
-  function pick(asset) {
-    onChange(asset.src);
-    setQuery('');
-    setOpen(false);
-  }
+  const getImagePath = (filename) => `/src/assets/${filename}`;
 
   return (
     <div className="form-group">
       <label>{label}</label>
-
-      {/* Search / trigger row */}
-      <div className="asset-picker-trigger" onClick={() => setOpen((o) => !o)}>
-        {value && (
-          <img src={value} alt="selected" className="asset-thumb-selected" />
-        )}
+      <div className="image-input-row">
         <input
           type="text"
-          className="asset-search-input"
-          placeholder={selected ? selected.name : 'Type filename or click to browse…'}
-          value={query}
-          onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          placeholder="Paste image path or select from picker"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
         />
-        <span className="asset-picker-arrow">{open ? '▲' : '▼'}</span>
+        <span className="or-divider">or</span>
+        <button
+          type="button"
+          className="file-upload-btn"
+          onClick={() => setShowPicker(!showPicker)}
+        >
+          {showPicker ? 'Close Picker' : 'Pick Image'}
+        </button>
       </div>
 
-      {/* Grid */}
-      {open && (
-        <div className="asset-grid">
-          {filtered.length === 0 && (
-            <p style={{ gridColumn: '1/-1', color: '#999', fontSize: '0.85rem', padding: '0.5rem' }}>
-              No matching images. Add the file to <code>src/assets/</code> and register it in AdminContext.jsx.
-            </p>
-          )}
-          {filtered.map((asset) => (
+      {showPicker && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+          gap: '1rem',
+          marginTop: '1rem',
+          padding: '1rem',
+          backgroundColor: '#f9f9f9',
+          borderRadius: '4px',
+          maxHeight: '400px',
+          overflowY: 'auto',
+        }}>
+          {availableAssets.map((asset) => (
             <div
-              key={asset.name}
-              className={`asset-grid-item ${value === asset.src ? 'selected' : ''}`}
-              onClick={() => pick(asset)}
+              key={asset}
+              onClick={() => {
+                onChange(getImagePath(asset));
+                setShowPicker(false);
+              }}
+              style={{
+                cursor: 'pointer',
+                textAlign: 'center',
+                padding: '0.5rem',
+                borderRadius: '4px',
+                backgroundColor: value === getImagePath(asset) ? '#2a9d8f' : '#fff',
+                border: value === getImagePath(asset) ? '2px solid #1a7d6f' : '1px solid #ddd',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (value !== getImagePath(asset)) {
+                  e.currentTarget.style.backgroundColor = '#f0f0f0';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (value !== getImagePath(asset)) {
+                  e.currentTarget.style.backgroundColor = '#fff';
+                }
+              }}
             >
-              <img src={asset.src} alt={asset.name} />
-              <span>{asset.name}</span>
+              <img
+                src={getImagePath(asset)}
+                alt={asset}
+                style={{
+                  width: '100%',
+                  height: '80px',
+                  objectFit: 'cover',
+                  borderRadius: '2px',
+                  marginBottom: '0.3rem',
+                }}
+              />
+              <span style={{
+                fontSize: '0.7rem',
+                display: 'block',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                color: value === getImagePath(asset) ? '#fff' : '#666',
+              }}>
+                {asset}
+              </span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Current selection label */}
-      {value && !open && (
-        <p style={{ fontSize: '0.78rem', color: '#2a9d8f', marginTop: '0.3rem' }}>
-          ✓ {selected?.name ?? 'Custom image selected'}
-        </p>
-      )}
+      {value && <img src={value} alt="preview" className="image-preview" />}
     </div>
   );
 }
@@ -78,6 +106,7 @@ function DestinationsTab() {
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   function set(field, val) { setForm((f) => ({ ...f, [field]: val })); }
 
@@ -89,17 +118,12 @@ function DestinationsTab() {
   }
   function cancel() { setShowForm(false); setEditId(null); }
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    const payload = {
-      ...form,
-      rating: parseFloat(form.rating) || 0,
-      lat: parseFloat(form.lat) || null,
-      lng: parseFloat(form.lng) || null,
-      activities: form.activities.split(',').map((a) => a.trim()).filter(Boolean),
-    };
-    if (editId) updateDestination(editId, payload);
-    else addDestination(payload);
+    setSaving(true);
+    if (editId) await updateDestination(editId, form);
+    else await addDestination(form);
+    setSaving(false);
     setShowForm(false);
     setEditId(null);
   }
@@ -158,9 +182,11 @@ function DestinationsTab() {
               </a>
             </div>
           </div>
-          <AssetPicker value={form.image} onChange={(v) => set('image', v)} />
+          <ImageInput value={form.image} onChange={(v) => set('image', v)} />
           <div className="form-actions">
-            <button type="submit" className="btn-save">{editId ? 'Save Changes' : 'Add Destination'}</button>
+            <button type="submit" className="btn-save" disabled={saving}>
+              {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Destination'}
+            </button>
             <button type="button" className="btn-cancel" onClick={cancel}>Cancel</button>
           </div>
         </form>
@@ -174,7 +200,7 @@ function DestinationsTab() {
           <tbody>
             {destinations.map((d) => (
               <tr key={d.id}>
-                <td><img src={d.image} alt={d.name} className="table-thumb" /></td>
+                <td>{d.image && <img src={d.image} alt={d.name} className="table-thumb" />}</td>
                 <td>{d.name}</td>
                 <td>{d.location}</td>
                 <td style={{ fontSize: '0.78rem', color: '#888' }}>
@@ -201,16 +227,19 @@ function BlogTab() {
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   function set(field, val) { setForm((f) => ({ ...f, [field]: val })); }
   function openAdd() { setForm(empty); setEditId(null); setShowForm(true); }
   function openEdit(p) { setForm(p); setEditId(p.id); setShowForm(true); }
   function cancel() { setShowForm(false); setEditId(null); }
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    if (editId) updateBlogPost(editId, form);
-    else addBlogPost(form);
+    setSaving(true);
+    if (editId) await updateBlogPost(editId, form);
+    else await addBlogPost(form);
+    setSaving(false);
     setShowForm(false);
     setEditId(null);
   }
@@ -259,18 +288,11 @@ function BlogTab() {
             <label>Content *</label>
             <textarea required rows={5} value={form.content} onChange={(e) => set('content', e.target.value)} />
           </div>
-          <div className="form-group">
-            <label>Image URL (external link)</label>
-            <input
-              type="text"
-              placeholder="https://example.com/image.jpg"
-              value={form.image}
-              onChange={(e) => set('image', e.target.value)}
-            />
-            {form.image && <img src={form.image} alt="preview" className="image-preview" />}
-          </div>
+          <ImageInput value={form.image} onChange={(v) => set('image', v)} />
           <div className="form-actions">
-            <button type="submit" className="btn-save">{editId ? 'Save Changes' : 'Add Article'}</button>
+            <button type="submit" className="btn-save" disabled={saving}>
+              {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Article'}
+            </button>
             <button type="button" className="btn-cancel" onClick={cancel}>Cancel</button>
           </div>
         </form>
@@ -284,7 +306,7 @@ function BlogTab() {
           <tbody>
             {blogPosts.map((p) => (
               <tr key={p.id}>
-                <td><img src={p.image} alt={p.title} className="table-thumb" /></td>
+                <td>{p.image && <img src={p.image} alt={p.title} className="table-thumb" />}</td>
                 <td>{p.title}</td>
                 <td>{p.author}</td>
                 <td>{p.category}</td>
@@ -309,16 +331,19 @@ function GalleryTab() {
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   function set(field, val) { setForm((f) => ({ ...f, [field]: val })); }
   function openAdd() { setForm(empty); setEditId(null); setShowForm(true); }
   function openEdit(g) { setForm(g); setEditId(g.id); setShowForm(true); }
   function cancel() { setShowForm(false); setEditId(null); }
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    if (editId) updateGalleryItem(editId, form);
-    else addGalleryItem(form);
+    setSaving(true);
+    if (editId) await updateGalleryItem(editId, form);
+    else await addGalleryItem(form);
+    setSaving(false);
     setShowForm(false);
     setEditId(null);
   }
@@ -337,9 +362,11 @@ function GalleryTab() {
             <label>Title *</label>
             <input required value={form.title} onChange={(e) => set('title', e.target.value)} />
           </div>
-          <AssetPicker value={form.url} onChange={(v) => set('url', v)} label="Photo" />
+          <ImageInput value={form.url} onChange={(v) => set('url', v)} label="Photo" />
           <div className="form-actions">
-            <button type="submit" className="btn-save">{editId ? 'Save Changes' : 'Add Photo'}</button>
+            <button type="submit" className="btn-save" disabled={saving}>
+              {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Photo'}
+            </button>
             <button type="button" className="btn-cancel" onClick={cancel}>Cancel</button>
           </div>
         </form>
@@ -348,7 +375,7 @@ function GalleryTab() {
       <div className="gallery-admin-grid">
         {gallery.map((g) => (
           <div key={g.id} className="gallery-admin-card">
-            <img src={g.url} alt={g.title} />
+            {g.url && <img src={g.url} alt={g.title} />}
             <div className="gallery-admin-info">
               <span>{g.title}</span>
               <div className="action-cell">
@@ -365,7 +392,17 @@ function GalleryTab() {
 
 // ─── PAGE BACKGROUNDS TAB ────────────────────────────────────────────────────
 function PageBgsTab() {
-  const { pageBgs, updatePageBg, resetPageBg } = useAdmin();
+  const { pageBgs, updatePageBg, resetPageBg, availableAssets } = useAdmin();
+  const [applied, setApplied] = useState({});
+  const [showPickers, setShowPickers] = useState({});
+
+  const getImagePath = (filename) => `/src/assets/${filename}`;
+
+  function handleImageSelect(pageId, imageUrl) {
+    updatePageBg(pageId, imageUrl);
+    setApplied((a) => ({ ...a, [pageId]: true }));
+    setTimeout(() => setApplied((a) => ({ ...a, [pageId]: false })), 3000);
+  }
 
   return (
     <div className="tab-content">
@@ -373,32 +410,170 @@ function PageBgsTab() {
         <h2>Page Backgrounds</h2>
       </div>
       <p style={{ color: '#666', marginTop: '-0.5rem' }}>
-        Choose an image from <code>src/assets</code> for each page header. Add new images to that folder and re-run the dev server to see them here.
+        Select an image from your local assets to set the header background for each page. Changes save instantly.
       </p>
 
       <div className="pagebg-grid">
-        {Object.entries(pageBgs).map(([pageId, { label, image }]) => (
-          <div key={pageId} className="pagebg-card">
-            <div
-              className="pagebg-preview"
-              style={{
-                backgroundImage: image
-                  ? `linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)), url(${image})`
-                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            >
-              <span className="pagebg-label">{label}</span>
-            </div>
-            <div className="pagebg-controls">
-              <AssetPicker value={image} onChange={(v) => updatePageBg(pageId, v)} label="Background Image" />
-              <div className="pagebg-actions">
-                <button className="btn-cancel" onClick={() => resetPageBg(pageId)}>Reset to default</button>
+        {Object.entries(pageBgs).map(([pageId, row]) => {
+          const image = row?.image_url || '';
+          const label = row?.label || pageId;
+          return (
+            <div key={pageId} className="pagebg-card">
+              <div
+                className="pagebg-preview"
+                style={{
+                  backgroundImage: image
+                    ? `linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)), url(${image})`
+                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <span className="pagebg-label">{label}</span>
+                {applied[pageId] && <span className="pagebg-applied-badge">✓ Applied</span>}
               </div>
+
+              <div className="pagebg-controls">
+                <button
+                  type="button"
+                  className="file-upload-btn"
+                  onClick={() => setShowPickers((s) => ({ ...s, [pageId]: !s[pageId] }))}
+                >
+                  {showPickers[pageId] ? 'Close Picker' : 'Pick Image'}
+                </button>
+                <div className="pagebg-actions">
+                  {image && (
+                    <button className="btn-cancel" onClick={() => resetPageBg(pageId)}>Reset</button>
+                  )}
+                </div>
+              </div>
+
+              {showPickers[pageId] && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                  gap: '0.5rem',
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  backgroundColor: '#f9f9f9',
+                  borderRadius: '4px',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                }}>
+                  {availableAssets.map((asset) => (
+                    <div
+                      key={asset}
+                      onClick={() => {
+                        handleImageSelect(pageId, getImagePath(asset));
+                        setShowPickers((s) => ({ ...s, [pageId]: false }));
+                      }}
+                      style={{
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        padding: '0.3rem',
+                        borderRadius: '4px',
+                        backgroundColor: image === getImagePath(asset) ? '#2a9d8f' : '#fff',
+                        border: image === getImagePath(asset) ? '2px solid #1a7d6f' : '1px solid #ddd',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <img
+                        src={getImagePath(asset)}
+                        alt={asset}
+                        style={{
+                          width: '100%',
+                          height: '60px',
+                          objectFit: 'cover',
+                          borderRadius: '2px',
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── PASSWORD MODAL ──────────────────────────────────────────────────────────
+function PasswordModal({ onSuccess }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const ADMIN_PASSWORD = 'admin123'; // Change this to your preferred password
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      sessionStorage.setItem('adminAuth', 'true');
+      onSuccess();
+    } else {
+      setError('Incorrect password. Try again.');
+      setPassword('');
+    }
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999,
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '2rem',
+        borderRadius: '8px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+        maxWidth: '400px',
+        width: '90%',
+      }}>
+        <h2 style={{ marginTop: 0, color: '#333' }}>🔐 Admin Panel</h2>
+        <p style={{ color: '#666', marginBottom: '1.5rem' }}>Enter the admin password to continue</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            placeholder="Admin password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              border: error ? '2px solid #e74c3c' : '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '1rem',
+              marginBottom: '0.5rem',
+              boxSizing: 'border-box',
+            }}
+            autoFocus
+          />
+          {error && <p style={{ color: '#e74c3c', fontSize: '0.9rem', margin: '0.5rem 0 1rem' }}>{error}</p>}
+          <button
+            type="submit"
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              backgroundColor: '#2a9d8f',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            Unlock Admin Panel
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -408,13 +583,28 @@ function PageBgsTab() {
 const TABS = ['Destinations', 'Articles', 'Gallery', 'Page Backgrounds'];
 
 function Admin() {
+  const { loading } = useAdmin();
   const [activeTab, setActiveTab] = useState('Destinations');
+  const [isAuthenticated, setIsAuthenticated] = useState(sessionStorage.getItem('adminAuth') === 'true');
+
+  if (!isAuthenticated) {
+    return <PasswordModal onSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <div className="admin-header"><h1>⚙️ Admin Dashboard</h1></div>
+        <div style={{ padding: '3rem', textAlign: 'center', color: '#666' }}>Loading data from Supabase…</div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
       <div className="admin-header">
         <h1>⚙️ Admin Dashboard</h1>
-        <p>Manage destinations, articles, gallery, and page backgrounds — all images come from <code>src/assets/</code></p>
+        <p>All changes save directly to Supabase — no page refresh needed</p>
       </div>
 
       <div className="admin-tabs">

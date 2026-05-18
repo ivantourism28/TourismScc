@@ -5,7 +5,7 @@ import '../styles/Blog.css';
 
 function Blog() {
   const { blogPosts, pageBgs } = useAdmin();
-  const bg = pageBgs?.blog?.image;
+  const bg = pageBgs?.blog?.image_url;
   const headerStyle = bg
     ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : {};

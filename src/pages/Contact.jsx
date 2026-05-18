@@ -4,7 +4,7 @@ import '../styles/Contact.css';
 
 function Contact() {
   const { pageBgs } = useAdmin();
-  const bg = pageBgs?.contact?.image;
+  const bg = pageBgs?.contact?.image_url;
   const headerStyle = bg
     ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : {};

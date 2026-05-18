@@ -5,10 +5,11 @@ import '../styles/Destinations.css';
 
 function Destinations() {
   const { destinations, pageBgs } = useAdmin();
-  const bg = pageBgs?.destinations?.image;
-  const headerStyle = bg
-    ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : {};
+  const bg = pageBgs?.destinations?.image_url;
+  const headerStyle = {
+    backgroundImage: bg ? `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url(${bg})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundSize: 'cover', backgroundPosition: 'center',
+  };
   return (
     <div className="destinations-page">
       <section className="destinations-header" style={headerStyle}>
