@@ -5,6 +5,7 @@ const AdminContext = createContext(null);
 // Available local assets
 const AVAILABLE_ASSETS = [
   'alinsyawanfalls.jpg',
+  'parkmarina.jpg',
   'Anahaw River and Paliran Falls.jpg',
   'boulevard.jpg',
   'Broce Ancestral House.jpeg',
@@ -35,6 +36,7 @@ const AVAILABLE_ASSETS = [
   'Sebatche Cave.jpg',
   'sipawayisland.jpg',
   'Tourismlogo1.1.png',
+  'monteagudo.jpg',
 ];
 
 export function AdminProvider({ children }) {
