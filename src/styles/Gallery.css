@@ -89,8 +89,10 @@
 
 .gallery-modal-content {
   position: relative;
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 500px;
+  max-height: 500px;
+  width: 90%;
+  height: 90%;
 }
 
 .gallery-modal-content img {

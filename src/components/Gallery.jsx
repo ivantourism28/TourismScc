@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import '../styles/Gallery.css';
 
-function Gallery() {
+function Gallery({ limit }) {
   const { gallery: galleryImages } = useAdmin();
   const [selectedImage, setSelectedImage] = useState(null);
+  
+  const displayedImages = limit ? galleryImages.slice(0, limit) : galleryImages;
 
   return (
     <section className="gallery">
@@ -13,7 +15,7 @@ function Gallery() {
         <p className="gallery-subtitle">Explore the beauty of San Carlos City</p>
 
         <div className="gallery-grid">
-          {galleryImages.map((image) => (
+          {displayedImages.map((image) => (
             <div 
               key={image.id} 
               className="gallery-item"

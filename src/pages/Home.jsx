@@ -72,7 +72,7 @@ function Home() {
       </section>
 
       {/* Gallery Section */}
-      <Gallery />
+      <Gallery limit={4} />
 
       {/* View All Gallery */}
       <section className="view-all-gallery">
