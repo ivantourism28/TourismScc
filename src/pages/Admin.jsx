@@ -7,7 +7,7 @@ function ImageInput({ value, onChange, label = 'Image' }) {
   const { availableAssets } = useAdmin();
   const [showPicker, setShowPicker] = useState(false);
 
-  const getImagePath = (filename) => `/assets/${filename}`;
+  const getImagePath = (filename) => `/src/assets/${filename}`;
 
   return (
     <div className="form-group">
@@ -396,7 +396,7 @@ function PageBgsTab() {
   const [applied, setApplied] = useState({});
   const [showPickers, setShowPickers] = useState({});
 
-  const getImagePath = (filename) => `/assets/${filename}`;
+  const getImagePath = (filename) => `/src/assets/${filename}`;
 
   function handleImageSelect(pageId, imageUrl) {
     updatePageBg(pageId, imageUrl);

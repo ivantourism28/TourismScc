@@ -4,13 +4,14 @@ import BlogCard from '../components/BlogCard';
 import DestinationCard from '../components/DestinationCard';
 import Gallery from '../components/Gallery';
 import TestimonialSection from '../components/TestimonialSection';
+import heroDefaultImage from '../assets/Image1.jpg';
 import '../styles/Home.css';
 
 function Home() {
   const { blogPosts, destinations, pageBgs } = useAdmin();
   const heroBg = pageBgs?.home?.image_url;
   const heroStyle = {
-    backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url(${heroBg || ''})`,
+    backgroundImage: `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url(${heroBg || heroDefaultImage})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
   };
