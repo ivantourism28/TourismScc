@@ -5,7 +5,6 @@ const AdminContext = createContext(null);
 // Available local assets
 const AVAILABLE_ASSETS = [
   'alinsyawanfalls.jpg',
-  'parkmarina.jpg',
   'Anahaw River and Paliran Falls.jpg',
   'boulevard.jpg',
   'Broce Ancestral House.jpeg',
@@ -22,13 +21,17 @@ const AVAILABLE_ASSETS = [
   'magoonfalls.jpg',
   'Mayana Peak.jpg',
   'mayanapeak.jpg',
+  'mayanapeak1.jpg',
   'Memorial Tree Park.png',
   'Monte Agundo Retreat Center.jpg',
+  'monteagudo.jpg',
   'Old Sugar Central Compound.png',
   'Pano-ilan Pottery.png',
   'park marina.jpg',
+  'parkmarina.jpg',
   'peoplespark.jpg',
   'punodviewdeck.jpg',
+  'react.svg',
   'San Carlos Chocolatet Hills.jpg',
   'sancarloscathedral.jpg',
   'SCBD Nursery.png',
@@ -36,7 +39,7 @@ const AVAILABLE_ASSETS = [
   'Sebatche Cave.jpg',
   'sipawayisland.jpg',
   'Tourismlogo1.1.png',
-  'monteagudo.jpg',
+  'vite.svg',
 ];
 
 export function AdminProvider({ children }) {
