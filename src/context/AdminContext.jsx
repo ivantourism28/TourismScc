@@ -53,6 +53,7 @@ export function AdminProvider({ children }) {
     destinations: { page_id: 'destinations', label: 'Destinations', image_url: null },
     about: { page_id: 'about', label: 'About', image_url: null },
     contact: { page_id: 'contact', label: 'Contact', image_url: null },
+    gallery: { page_id: 'gallery', label: 'Photo Gallery', image_url: null },
   };
 
   // Load all data from localStorage on mount
