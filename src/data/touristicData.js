@@ -1,7 +1,7 @@
 // San Carlos City Tourism Data
 
 // Local asset imports — add more images to src/assets/ and import them here
-import mayanapeak from '../assets/mayanapeak.jpg';
+import mayanapeak from '../assets/mayanapeak1.jpg';
 import sipawayisland from '../assets/sipawayisland.jpg';
 import peoplespark from '../assets/peoplespark.jpg';
 import sancarloscathedral from '../assets/sancarloscathedral.jpg';
