@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Header.css';
-import Tourismlogo from "../assets/Tourismlogo1.1.png";
-import scclogo from "../assets/scclogo1.png";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,8 +14,8 @@ function Header() {
     <div className="header-container">
          <div className="logo">
         <Link to="/" className="logo-link">
-            <img src={Tourismlogo} alt="Tourismlogo" className="logo-img" />
-            <img src={scclogo} alt="scclogo" className="logo-img" />
+            <img src="/assets/Tourismlogo1.1.png" alt="Tourismlogo" className="logo-img" />
+            <img src="/assets/scclogo1.png" alt="scclogo" className="logo-img" />
             <span>Turismo San Carlos</span>
         </Link>
         </div>

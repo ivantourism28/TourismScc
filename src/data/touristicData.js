@@ -1,10 +1,6 @@
 // San Carlos City Tourism Data
 
-// Local asset imports — add more images to src/assets/ and import them here
-import mayanapeak from '../assets/mayanapeak1.jpg';
-import sipawayisland from '../assets/sipawayisland.jpg';
-import peoplespark from '../assets/peoplespark.jpg';
-import sancarloscathedral from '../assets/sancarloscathedral.jpg';
+// Note: Add images to public/assets/ folder. For example: public/assets/mayanapeak1.jpg
 
 export const destinations = [
   {
@@ -12,7 +8,7 @@ export const destinations = [
     name: "Mayana Peak",
     description: "A stunning peak offering beautiful views and recreational activities",
     location: "Sitio Mayana, Barangay Prosperidad, San Carlos City",
-    image: mayanapeak,
+    image: "/assets/mayanapeak1.jpg",
     activities: ["Photography", "Hiking", "Picnicking"],
     openingHours: "7:00 AM - 6:00 PM",
     rating: 4.8,
@@ -24,7 +20,7 @@ export const destinations = [
     name: "Peoples Park",
     description: "A picturesque park perfect for leisure, nature walks, and relaxation",
     location: "V. Gustilo St., Barangay 3, San Carlos City",
-    image: peoplespark,
+    image: "/assets/peoplespark.jpg",
     activities: ["Swimming", "Nature Walk", "Photography"],
     openingHours: "8:00 AM - 5:00 PM",
     rating: 4.6,
@@ -36,7 +32,7 @@ export const destinations = [
     name: "Sipaway Island",
     description: "A serene island offering authentic local experiences and cultural heritage",
     location: "San Carlos City",
-    image: sipawayisland,
+    image: "/assets/sipawayisland.jpg",
     activities: ["Cultural Tour", "Local Food", "Village Walk"],
     openingHours: "24/7",
     rating: 4.4,
@@ -48,7 +44,7 @@ export const destinations = [
     name: "San Carlos Cathedral",
     description: "Historic cathedral showcasing religious and architectural significance",
     location: "Downtown San Carlos City",
-    image: sancarloscathedral,
+    image: "/assets/sancarloscathedral.jpg",
     activities: ["Religious Tour", "Photography", "History"],
     openingHours: "6:00 AM - 8:00 PM",
     rating: 4.7,
