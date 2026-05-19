@@ -70,7 +70,9 @@ export function AdminProvider({ children }) {
       
       // Initialize pageBgs with defaults if not in localStorage
       if (savedPageBgs) {
-        setPageBgs(JSON.parse(savedPageBgs));
+        const saved = JSON.parse(savedPageBgs);
+        // Merge saved data with defaults to include new pages
+        setPageBgs({ ...DEFAULT_PAGE_BGS, ...saved });
       } else {
         setPageBgs(DEFAULT_PAGE_BGS);
         localStorage.setItem('pageBgs', JSON.stringify(DEFAULT_PAGE_BGS));
