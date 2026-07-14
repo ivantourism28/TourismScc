@@ -3,6 +3,46 @@ import { supabase, uploadImage } from '../lib/supabase';
 
 const AdminContext = createContext(null);
 
+// Available local assets
+const AVAILABLE_ASSETS = [
+  'alinsyawanfalls.jpg',
+  'Anahaw River and Paliran Falls.jpg',
+  'boulevard.jpg',
+  'Broce Ancestral House.jpeg',
+  'cabagtasantribe.jpg',
+  'centermall.jpg',
+  'cityhall.jpg',
+  'codcodriceterraces.jpg',
+  'ecozone.jpeg',
+  'fountain.jpg',
+  'guiobcave.jpg',
+  'hero.png',
+  'Image1.jpg',
+  'lapuscave.jpg',
+  'magoonfalls.jpg',
+  'Mayana Peak.jpg',
+  'mayanapeak.jpg',
+  'mayanapeak1.jpg',
+  'Memorial Tree Park.png',
+  'Monte Agundo Retreat Center.jpg',
+  'monteagundo.jpg',
+  'Old Sugar Central Compound.png',
+  'Pano-ilan Pottery.png',
+  'park marina.jpg',
+  'parkmarina.jpg',
+  'peoplespark.jpg',
+  'punodviewdeck.jpg',
+  'react.svg',
+  'San Carlos Chocolatet Hills.jpg',
+  'sancarloscathedral.jpg',
+  'SCBD Nursery.png',
+  'scclogo1.png',
+  'Sebatche Cave.jpg',
+  'sipawayisland.jpg',
+  'Tourismlogo1.1.png',
+  'vite.svg',
+];
+
 export function AdminProvider({ children }) {
   const [destinations, setDestinations] = useState([]);
   const [blogPosts, setBlogPosts] = useState([]);
@@ -47,26 +87,45 @@ export function AdminProvider({ children }) {
   }
 
   // Normalize from camelCase (app) to snake_case (DB)
-  function toDB(obj) {
-    return {
-      name: obj.name,
-      title: obj.title,
-      location: obj.location,
-      description: obj.description,
-      image_url: obj.image || obj.imageUrl || obj.url,
-      activities: Array.isArray(obj.activities) ? obj.activities : obj.activities?.split(',').map(s => s.trim()).filter(Boolean),
-      opening_hours: obj.openingHours,
-      rating: obj.rating ? parseFloat(obj.rating) : null,
-      lat: obj.lat ? parseFloat(obj.lat) : null,
-      lng: obj.lng ? parseFloat(obj.lng) : null,
-      author: obj.author,
-      date: obj.date || null,
-      category: obj.category,
-      excerpt: obj.excerpt,
-      content: obj.content,
-      featured: !!obj.featured,
-      url: obj.url || obj.image || obj.imageUrl,
-    };
+  function toDB(obj, type = 'destination') {
+    const base = {};
+    
+    // Common fields
+    if (obj.name) base.name = obj.name;
+    if (obj.title) base.title = obj.title;
+    if (obj.location) base.location = obj.location;
+    if (obj.description) base.description = obj.description;
+    
+    // Image field (handle different property names)
+    const imageUrl = obj.image || obj.imageUrl || obj.url;
+    if (imageUrl) base.image_url = imageUrl;
+    
+    // Destination-specific fields
+    if (type === 'destination') {
+      if (obj.activities) {
+        base.activities = Array.isArray(obj.activities) 
+          ? obj.activities 
+          : obj.activities?.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      if (obj.openingHours) base.opening_hours = obj.openingHours;
+      if (obj.rating) base.rating = parseFloat(obj.rating) || null;
+      if (obj.lat) base.lat = parseFloat(obj.lat) || null;
+      if (obj.lng) base.lng = parseFloat(obj.lng) || null;
+    }
+    
+    // Blog post-specific fields
+    if (type === 'blog') {
+      if (obj.author) base.author = obj.author;
+      if (obj.date) base.date = obj.date;
+      if (obj.category) base.category = obj.category;
+      if (obj.excerpt) base.excerpt = obj.excerpt;
+      if (obj.content) base.content = obj.content;
+      base.featured = !!obj.featured;
+    }
+    
+    // Gallery only needs title and image_url (already set above)
+    
+    return base;
   }
 
   // Load all data from Supabase on mount
@@ -111,44 +170,122 @@ export function AdminProvider({ children }) {
 
   // Destinations CRUD
   async function addDestination(item) {
-    const payload = toDB(item);
-    const { data, error } = await supabase.from('destinations').insert([payload]).select();
-    if (error) { console.error('Add destination error:', error); return; }
-    if (data) setDestinations(prev => [toApp(data[0]), ...prev]);
+    try {
+      const payload = toDB(item, 'destination');
+      console.log('Adding destination:', payload);
+      const { data, error } = await supabase.from('destinations').insert([payload]).select();
+      if (error) {
+        console.error('Add destination error:', error);
+        alert(`Error adding destination: ${error.message}`);
+        throw error;
+      }
+      if (data && data.length > 0) {
+        const newItem = toApp(data[0]);
+        console.log('Destination added:', newItem);
+        setDestinations(prev => [newItem, ...prev]);
+      }
+    } catch (err) {
+      console.error('Exception in addDestination:', err);
+      throw err;
+    }
   }
 
   async function updateDestination(id, item) {
-    const payload = toDB(item);
-    const { data, error } = await supabase.from('destinations').update(payload).eq('id', id).select();
-    if (error) { console.error('Update destination error:', error); return; }
-    if (data) setDestinations(prev => prev.map(d => d.id === id ? toApp(data[0]) : d));
+    try {
+      const payload = toDB(item, 'destination');
+      console.log('Updating destination:', id, payload);
+      const { data, error } = await supabase.from('destinations').update(payload).eq('id', id).select();
+      if (error) {
+        console.error('Update destination error:', error);
+        alert(`Error updating destination: ${error.message}`);
+        throw error;
+      }
+      if (data && data.length > 0) {
+        const updated = toApp(data[0]);
+        console.log('Destination updated:', updated);
+        setDestinations(prev => prev.map(d => d.id === id ? updated : d));
+      }
+    } catch (err) {
+      console.error('Exception in updateDestination:', err);
+      throw err;
+    }
   }
 
   async function deleteDestination(id) {
-    const { error } = await supabase.from('destinations').delete().eq('id', id);
-    if (error) { console.error('Delete destination error:', error); return; }
-    setDestinations(prev => prev.filter(d => d.id !== id));
+    try {
+      console.log('Deleting destination:', id);
+      const { error } = await supabase.from('destinations').delete().eq('id', id);
+      if (error) {
+        console.error('Delete destination error:', error);
+        alert(`Error deleting destination: ${error.message}`);
+        throw error;
+      }
+      console.log('Destination deleted:', id);
+      setDestinations(prev => prev.filter(d => d.id !== id));
+    } catch (err) {
+      console.error('Exception in deleteDestination:', err);
+      throw err;
+    }
   }
 
   // Blog Posts CRUD
   async function addBlogPost(item) {
-    const payload = toDB(item);
-    const { data, error } = await supabase.from('blog_posts').insert([payload]).select();
-    if (error) { console.error('Add blog post error:', error); return; }
-    if (data) setBlogPosts(prev => [toApp(data[0]), ...prev]);
+    try {
+      const payload = toDB(item, 'blog');
+      console.log('Adding blog post:', payload);
+      const { data, error } = await supabase.from('blog_posts').insert([payload]).select();
+      if (error) {
+        console.error('Add blog post error:', error);
+        alert(`Error adding blog post: ${error.message}`);
+        throw error;
+      }
+      if (data && data.length > 0) {
+        const newItem = toApp(data[0]);
+        console.log('Blog post added:', newItem);
+        setBlogPosts(prev => [newItem, ...prev]);
+      }
+    } catch (err) {
+      console.error('Exception in addBlogPost:', err);
+      throw err;
+    }
   }
 
   async function updateBlogPost(id, item) {
-    const payload = toDB(item);
-    const { data, error } = await supabase.from('blog_posts').update(payload).eq('id', id).select();
-    if (error) { console.error('Update blog post error:', error); return; }
-    if (data) setBlogPosts(prev => prev.map(p => p.id === id ? toApp(data[0]) : p));
+    try {
+      const payload = toDB(item, 'blog');
+      console.log('Updating blog post:', id, payload);
+      const { data, error } = await supabase.from('blog_posts').update(payload).eq('id', id).select();
+      if (error) {
+        console.error('Update blog post error:', error);
+        alert(`Error updating blog post: ${error.message}`);
+        throw error;
+      }
+      if (data && data.length > 0) {
+        const updated = toApp(data[0]);
+        console.log('Blog post updated:', updated);
+        setBlogPosts(prev => prev.map(p => p.id === id ? updated : p));
+      }
+    } catch (err) {
+      console.error('Exception in updateBlogPost:', err);
+      throw err;
+    }
   }
 
   async function deleteBlogPost(id) {
-    const { error } = await supabase.from('blog_posts').delete().eq('id', id);
-    if (error) { console.error('Delete blog post error:', error); return; }
-    setBlogPosts(prev => prev.filter(p => p.id !== id));
+    try {
+      console.log('Deleting blog post:', id);
+      const { error } = await supabase.from('blog_posts').delete().eq('id', id);
+      if (error) {
+        console.error('Delete blog post error:', error);
+        alert(`Error deleting blog post: ${error.message}`);
+        throw error;
+      }
+      console.log('Blog post deleted:', id);
+      setBlogPosts(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error('Exception in deleteBlogPost:', err);
+      throw err;
+    }
   }
 
   // Gallery CRUD
@@ -193,6 +330,7 @@ export function AdminProvider({ children }) {
       blogPosts, addBlogPost, updateBlogPost, deleteBlogPost,
       gallery, addGalleryItem, updateGalleryItem, deleteGalleryItem,
       pageBgs, updatePageBg, resetPageBg,
+      availableAssets: AVAILABLE_ASSETS,
       uploadImage, // Export uploadImage for use in Admin.jsx
     }}>
       {children}
