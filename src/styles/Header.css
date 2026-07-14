@@ -1,125 +1,262 @@
-/* Header Styles */
+/* Header Styles - Professional Design */
 .header {
-  background: linear-gradient(135deg, #beb214d6 0%, #24c005 100%);
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
   color: white;
-  padding: 0.5rem 0;
+  padding: 0;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .header-container {
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0.75rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: relative;
 }
 
-.logo-link {
-  img {
-    height: 40px;
-    width: 40px;
-    margin-right: 0.5rem;
-  }
-  font-size: 1.4rem;
-  font-weight: bold;
-  text-decoration: none;
-  color: rgb(0, 0, 0);
+.logo {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  line-height: 1;
 }
 
 .logo-link:hover {
+  transform: translateY(-2px);
   opacity: 0.9;
+}
+
+.logo-img {
+  height: 45px;
+  width: 45px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.logo-link:hover .logo-img {
+  transform: scale(1.05);
+}
+
+.logo-link span {
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .nav {
   display: flex;
-  gap: 2rem;
+  gap: 0.5rem;
   align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-link {
-  color: rgb(0, 0, 0);
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   font-weight: 500;
-  transition: opacity 0.3s;
-  padding: 0.3rem 0.7rem;
-  border-radius: 4px;
   font-size: 0.95rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  transition: width 0.3s ease;
 }
 
 .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  opacity: 0.9;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.nav-link:hover::before {
+  width: 80%;
 }
 
 .nav-link-directory {
-  border: 1.5px solid rgba(0, 0, 0, 0.4);
-  border-radius: 4px;
+  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  border: none;
+  margin-left: 0.5rem;
+}
+
+.nav-link-directory:hover {
+  background: linear-gradient(135deg, #2980b9 0%, #27ae60 100%);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+  transform: translateY(-3px);
+}
+
+.nav-link-directory::before {
+  display: none;
 }
 
 .hamburger {
   display: none;
   flex-direction: column;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  gap: 6px;
-}
-
-.hamburger span {
-  width: 25px;
-  height: 3px;
-  background-color: white;
-  border-radius: 2px;
+  gap: 5px;
+  padding: 0.5rem;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
-@media (max-width: 768px) {
+.hamburger:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.hamburger span {
+  width: 24px;
+  height: 2.5px;
+  background-color: white;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.hamburger:hover span {
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+}
+
+@media (max-width: 968px) {
   .hamburger {
     display: flex;
   }
 
   .nav {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 1px);
     left: 0;
     right: 0;
     flex-direction: column;
-    align-items: flex-start;
-    background: linear-gradient(135deg, #beb214d6 0%, #24c005 100%);
-    padding: 0 1rem;
+    align-items: stretch;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    padding: 0;
     gap: 0;
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease, padding 0.3s ease;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .nav.open {
-    max-height: 500px;
-    padding: 1rem;
+    max-height: 600px;
+    padding: 1rem 0;
   }
 
   .nav .nav-link {
     width: 100%;
-    padding: 0.6rem 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 1rem 2rem;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+
+  .nav .nav-link:hover {
+    background: rgba(52, 152, 219, 0.15);
+    padding-left: 2.5rem;
+    border-left: 3px solid #3498db;
+  }
+
+  .nav .nav-link::before {
+    display: none;
   }
 
   .nav .nav-link:last-child {
     border-bottom: none;
   }
 
+  .nav-link-directory {
+    margin: 0.5rem 1rem 0;
+    text-align: center;
+    border-radius: 8px;
+  }
+
+  .nav-link-directory:hover {
+    padding-left: 1.2rem;
+    border-left: none;
+  }
+
   .header-container {
-    padding: 0 1rem;
+    padding: 0.75rem 1.5rem;
   }
 
   .logo-link {
-    font-size: 1.4rem;
+    font-size: 1.15rem;
+  }
+
+  .logo-img {
+    height: 38px;
+    width: 38px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 0.65rem 1rem;
+  }
+
+  .logo-link {
+    font-size: 1rem;
+    gap: 0.5rem;
+  }
+
+  .logo-link span {
+    display: none;
+  }
+
+  .logo-img {
+    height: 35px;
+    width: 35px;
+  }
+
+  .nav .nav-link {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.9rem;
   }
 }
