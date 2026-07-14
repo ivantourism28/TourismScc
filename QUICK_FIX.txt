@@ -1,0 +1,192 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║                     ⚠️  ACCESS DENIED ERROR? ⚠️                           ║
+║                                                                           ║
+║          You need to create YOUR OWN Supabase project first!             ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════
+🔍 WHAT HAPPENED
+═══════════════════════════════════════════════════════════════════════════
+
+The code currently has credentials for a Supabase project that you don't
+own. You need to:
+
+1. Create YOUR OWN Supabase project (FREE!)
+2. Update the credentials in the code
+3. Set up the database tables
+
+It takes about 15 minutes total.
+
+═══════════════════════════════════════════════════════════════════════════
+📖 STEP-BY-STEP GUIDE
+═══════════════════════════════════════════════════════════════════════════
+
+👉 READ THIS FILE: SETUP_YOUR_SUPABASE.md
+
+This file has complete instructions with screenshots descriptions.
+
+Or follow this quick version:
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 1: Create Supabase Account (2 minutes)                          ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. Go to: https://supabase.com
+2. Click "Start your project" or "Sign In"
+3. Sign up with GitHub (easiest) or email
+4. Complete signup
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 2: Create New Project (3 minutes)                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. Click "New Project" button
+2. Fill in:
+   • Name: San Carlos Tourism Blog
+   • Password: (create strong password - SAVE IT!)
+   • Region: Southeast Asia (or closest to you)
+   • Plan: Free tier
+3. Click "Create new project"
+4. Wait 1-2 minutes
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 3: Get Your Credentials (2 minutes)                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. In Supabase, click your new project
+2. Click Settings (⚙️) → API
+3. Copy these TWO values:
+
+   A. Project URL (looks like):
+      https://xxxxx.supabase.co
+
+   B. anon public key (LONG text starting with):
+      eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc...
+
+4. Save both somewhere temporarily (like a text file)
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 4: Update Your Code (2 minutes)                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. Open this file in your code editor:
+   src/lib/supabase.js
+
+2. Find these lines:
+   const SUPABASE_URL  = 'https://mieuzxkqluqztiblbfnd.supabase.co';
+   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6...';
+
+3. Replace with YOUR credentials from Step 3:
+   const SUPABASE_URL  = 'https://YOUR-PROJECT.supabase.co';
+   const SUPABASE_ANON = 'YOUR-ANON-KEY-HERE';
+
+4. Save the file
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 5: Setup Database (5 minutes)                                   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. In Supabase dashboard, click SQL Editor
+2. Click "New query"
+3. Open this file: supabase-setup.sql
+4. Copy ALL the SQL code
+5. Paste into Supabase SQL Editor
+6. Click "Run"
+7. Wait for success message
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 6: Setup Storage (3 minutes)                                    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. In Supabase, click Storage
+2. Click "New bucket"
+3. Name: images
+4. Toggle "Public bucket" ON
+5. Click "Create bucket"
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 7: Test Locally (5 minutes)                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. In terminal, run:
+   npm run dev
+
+2. Open browser:
+   http://localhost:5173/admin
+
+3. Enter password: admin123
+
+4. Try adding a test destination
+
+5. If it works, you're all set!
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 8: Deploy (3 minutes)                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. In terminal:
+   git add .
+   git commit -m "Updated Supabase credentials"
+   git push
+
+2. Wait for Vercel to deploy (2-3 minutes)
+
+3. Test live site:
+   https://tourismscc1-4.vercel.app/admin
+
+═══════════════════════════════════════════════════════════════════════════
+📚 DETAILED GUIDES
+═══════════════════════════════════════════════════════════════════════════
+
+For more details, read these files:
+
+  • SETUP_YOUR_SUPABASE.md    → Complete setup guide with explanations
+  • START_HERE.md             → Quick start after Supabase is ready
+  • TROUBLESHOOTING.md        → Common problems and solutions
+
+═══════════════════════════════════════════════════════════════════════════
+💡 KEY POINTS
+═══════════════════════════════════════════════════════════════════════════
+
+✓ Supabase is FREE (no credit card needed)
+✓ Takes about 15 minutes to set up YOUR project
+✓ You get your own database and storage
+✓ Unlimited data storage on free tier
+✓ Professional infrastructure
+
+═══════════════════════════════════════════════════════════════════════════
+🆘 NEED HELP?
+═══════════════════════════════════════════════════════════════════════════
+
+Stuck on a step? Check these:
+
+  1. Read SETUP_YOUR_SUPABASE.md for detailed instructions
+  2. Make sure you're logged into YOUR Supabase account
+  3. Double-check you copied BOTH credentials (URL + key)
+  4. Verify you updated src/lib/supabase.js correctly
+  5. Make sure SQL script ran without errors
+
+═══════════════════════════════════════════════════════════════════════════
+✅ CHECKLIST
+═══════════════════════════════════════════════════════════════════════════
+
+Track your progress:
+
+  [ ] Created Supabase account
+  [ ] Created new project
+  [ ] Copied Project URL
+  [ ] Copied anon key
+  [ ] Updated src/lib/supabase.js
+  [ ] Ran SQL script
+  [ ] Created images bucket
+  [ ] Set bucket to public
+  [ ] Tested locally
+  [ ] Deployed to Vercel
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 START HERE: Read SETUP_YOUR_SUPABASE.md for complete instructions!
+
+═══════════════════════════════════════════════════════════════════════════

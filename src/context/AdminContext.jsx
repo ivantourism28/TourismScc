@@ -1,46 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase, uploadImage } from '../lib/supabase';
 
 const AdminContext = createContext(null);
-
-// Available local assets
-const AVAILABLE_ASSETS = [
-  'alinsyawanfalls.jpg',
-  'Anahaw River and Paliran Falls.jpg',
-  'boulevard.jpg',
-  'Broce Ancestral House.jpeg',
-  'cabagtasantribe.jpg',
-  'centermall.jpg',
-  'cityhall.jpg',
-  'codcodriceterraces.jpg',
-  'ecozone.jpeg',
-  'fountain.jpg',
-  'guiobcave.jpg',
-  'hero.png',
-  'Image1.jpg',
-  'lapuscave.jpg',
-  'magoonfalls.jpg',
-  'Mayana Peak.jpg',
-  'mayanapeak.jpg',
-  'mayanapeak1.jpg',
-  'Memorial Tree Park.png',
-  'Monte Agundo Retreat Center.jpg',
-  'monteagudo.jpg',
-  'Old Sugar Central Compound.png',
-  'Pano-ilan Pottery.png',
-  'park marina.jpg',
-  'parkmarina.jpg',
-  'peoplespark.jpg',
-  'punodviewdeck.jpg',
-  'react.svg',
-  'San Carlos Chocolatet Hills.jpg',
-  'sancarloscathedral.jpg',
-  'SCBD Nursery.png',
-  'scclogo1.png',
-  'Sebatche Cave.jpg',
-  'sipawayisland.jpg',
-  'Tourismlogo1.1.png',
-  'vite.svg',
-];
 
 export function AdminProvider({ children }) {
   const [destinations, setDestinations] = useState([]);
@@ -59,163 +20,170 @@ export function AdminProvider({ children }) {
     gallery: { page_id: 'gallery', label: 'Photo Gallery', image_url: null },
   };
 
-  // Load all data from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedDestinations = localStorage.getItem('destinations');
-      const savedBlogPosts = localStorage.getItem('blogPosts');
-      const savedGallery = localStorage.getItem('gallery');
-      const savedPageBgs = localStorage.getItem('pageBgs');
+  // Normalize from snake_case (DB) to camelCase (app)
+  function toApp(row) {
+    if (!row) return row;
+    return {
+      id: row.id,
+      name: row.name,
+      title: row.title,
+      location: row.location,
+      description: row.description,
+      image: row.image_url,
+      imageUrl: row.image_url,
+      url: row.url || row.image_url,
+      activities: row.activities || [],
+      openingHours: row.opening_hours,
+      rating: row.rating,
+      lat: row.lat,
+      lng: row.lng,
+      author: row.author,
+      date: row.date,
+      category: row.category,
+      excerpt: row.excerpt,
+      content: row.content,
+      featured: row.featured,
+    };
+  }
 
-      if (savedDestinations) setDestinations(JSON.parse(savedDestinations));
-      if (savedBlogPosts) setBlogPosts(JSON.parse(savedBlogPosts));
-      if (savedGallery) setGallery(JSON.parse(savedGallery));
-      
-      // Initialize pageBgs with defaults if not in localStorage
-      if (savedPageBgs) {
-        const saved = JSON.parse(savedPageBgs);
-        // Merge saved data with defaults to include new pages
-        setPageBgs({ ...DEFAULT_PAGE_BGS, ...saved });
-      } else {
+  // Normalize from camelCase (app) to snake_case (DB)
+  function toDB(obj) {
+    return {
+      name: obj.name,
+      title: obj.title,
+      location: obj.location,
+      description: obj.description,
+      image_url: obj.image || obj.imageUrl || obj.url,
+      activities: Array.isArray(obj.activities) ? obj.activities : obj.activities?.split(',').map(s => s.trim()).filter(Boolean),
+      opening_hours: obj.openingHours,
+      rating: obj.rating ? parseFloat(obj.rating) : null,
+      lat: obj.lat ? parseFloat(obj.lat) : null,
+      lng: obj.lng ? parseFloat(obj.lng) : null,
+      author: obj.author,
+      date: obj.date || null,
+      category: obj.category,
+      excerpt: obj.excerpt,
+      content: obj.content,
+      featured: !!obj.featured,
+      url: obj.url || obj.image || obj.imageUrl,
+    };
+  }
+
+  // Load all data from Supabase on mount
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [destRes, blogRes, galleryRes, bgRes] = await Promise.all([
+          supabase.from('destinations').select('*').order('id', { ascending: false }),
+          supabase.from('blog_posts').select('*').order('id', { ascending: false }),
+          supabase.from('gallery').select('*').order('id', { ascending: false }),
+          supabase.from('page_backgrounds').select('*'),
+        ]);
+
+        if (destRes.error) console.error('Destinations load error:', destRes.error);
+        else setDestinations((destRes.data || []).map(toApp));
+
+        if (blogRes.error) console.error('Blog posts load error:', blogRes.error);
+        else setBlogPosts((blogRes.data || []).map(toApp));
+
+        if (galleryRes.error) console.error('Gallery load error:', galleryRes.error);
+        else setGallery((galleryRes.data || []).map(toApp));
+
+        if (bgRes.error) console.error('Page backgrounds load error:', bgRes.error);
+        else {
+          const bgMap = { ...DEFAULT_PAGE_BGS };
+          (bgRes.data || []).forEach(row => {
+            if (row.page_id) {
+              bgMap[row.page_id] = { page_id: row.page_id, label: bgMap[row.page_id]?.label || row.page_id, image_url: row.image_url };
+            }
+          });
+          setPageBgs(bgMap);
+        }
+      } catch (err) {
+        console.error('Error loading from Supabase:', err);
         setPageBgs(DEFAULT_PAGE_BGS);
-        localStorage.setItem('pageBgs', JSON.stringify(DEFAULT_PAGE_BGS));
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error loading from localStorage:', err);
-      // Set defaults on error
-      setPageBgs(DEFAULT_PAGE_BGS);
-    } finally {
-      setLoading(false);
     }
+    loadData();
   }, []);
 
   // Destinations CRUD
-  function addDestination(item) {
-    const newItem = {
-      id: Date.now(),
-      name: item.name,
-      location: item.location,
-      description: item.description,
-      image: item.image,
-      activities: Array.isArray(item.activities)
-        ? item.activities
-        : item.activities?.split(',').map(a => a.trim()).filter(Boolean) ?? [],
-      openingHours: item.openingHours,
-      rating: parseFloat(item.rating) || null,
-      lat: parseFloat(item.lat) || null,
-      lng: parseFloat(item.lng) || null,
-    };
-    const updated = [...destinations, newItem];
-    setDestinations(updated);
-    localStorage.setItem('destinations', JSON.stringify(updated));
+  async function addDestination(item) {
+    const payload = toDB(item);
+    const { data, error } = await supabase.from('destinations').insert([payload]).select();
+    if (error) { console.error('Add destination error:', error); return; }
+    if (data) setDestinations(prev => [toApp(data[0]), ...prev]);
   }
 
-  function updateDestination(id, item) {
-    const updated = destinations.map(d =>
-      d.id === id ? {
-        ...d,
-        name: item.name,
-        location: item.location,
-        description: item.description,
-        image: item.image,
-        activities: Array.isArray(item.activities)
-          ? item.activities
-          : item.activities?.split(',').map(a => a.trim()).filter(Boolean) ?? [],
-        openingHours: item.openingHours,
-        rating: parseFloat(item.rating) || null,
-        lat: parseFloat(item.lat) || null,
-        lng: parseFloat(item.lng) || null,
-      } : d
-    );
-    setDestinations(updated);
-    localStorage.setItem('destinations', JSON.stringify(updated));
+  async function updateDestination(id, item) {
+    const payload = toDB(item);
+    const { data, error } = await supabase.from('destinations').update(payload).eq('id', id).select();
+    if (error) { console.error('Update destination error:', error); return; }
+    if (data) setDestinations(prev => prev.map(d => d.id === id ? toApp(data[0]) : d));
   }
 
-  function deleteDestination(id) {
-    const updated = destinations.filter(d => d.id !== id);
-    setDestinations(updated);
-    localStorage.setItem('destinations', JSON.stringify(updated));
+  async function deleteDestination(id) {
+    const { error } = await supabase.from('destinations').delete().eq('id', id);
+    if (error) { console.error('Delete destination error:', error); return; }
+    setDestinations(prev => prev.filter(d => d.id !== id));
   }
 
   // Blog Posts CRUD
-  function addBlogPost(item) {
-    const newItem = {
-      id: Date.now(),
-      title: item.title,
-      author: item.author,
-      date: item.date || null,
-      category: item.category,
-      excerpt: item.excerpt,
-      content: item.content,
-      image: item.image,
-      featured: !!item.featured,
-    };
-    const updated = [...blogPosts, newItem];
-    setBlogPosts(updated);
-    localStorage.setItem('blogPosts', JSON.stringify(updated));
+  async function addBlogPost(item) {
+    const payload = toDB(item);
+    const { data, error } = await supabase.from('blog_posts').insert([payload]).select();
+    if (error) { console.error('Add blog post error:', error); return; }
+    if (data) setBlogPosts(prev => [toApp(data[0]), ...prev]);
   }
 
-  function updateBlogPost(id, item) {
-    const updated = blogPosts.map(p =>
-      p.id === id ? {
-        ...p,
-        title: item.title,
-        author: item.author,
-        date: item.date || null,
-        category: item.category,
-        excerpt: item.excerpt,
-        content: item.content,
-        image: item.image,
-        featured: !!item.featured,
-      } : p
-    );
-    setBlogPosts(updated);
-    localStorage.setItem('blogPosts', JSON.stringify(updated));
+  async function updateBlogPost(id, item) {
+    const payload = toDB(item);
+    const { data, error } = await supabase.from('blog_posts').update(payload).eq('id', id).select();
+    if (error) { console.error('Update blog post error:', error); return; }
+    if (data) setBlogPosts(prev => prev.map(p => p.id === id ? toApp(data[0]) : p));
   }
 
-  function deleteBlogPost(id) {
-    const updated = blogPosts.filter(p => p.id !== id);
-    setBlogPosts(updated);
-    localStorage.setItem('blogPosts', JSON.stringify(updated));
+  async function deleteBlogPost(id) {
+    const { error } = await supabase.from('blog_posts').delete().eq('id', id);
+    if (error) { console.error('Delete blog post error:', error); return; }
+    setBlogPosts(prev => prev.filter(p => p.id !== id));
   }
 
   // Gallery CRUD
-  function addGalleryItem(item) {
-    const newItem = {
-      id: Date.now(),
-      title: item.title,
-      url: item.url,
-    };
-    const updated = [...gallery, newItem];
-    setGallery(updated);
-    localStorage.setItem('gallery', JSON.stringify(updated));
+  async function addGalleryItem(item) {
+    const payload = toDB(item);
+    const { data, error } = await supabase.from('gallery').insert([payload]).select();
+    if (error) { console.error('Add gallery error:', error); return; }
+    if (data) setGallery(prev => [toApp(data[0]), ...prev]);
   }
 
-  function updateGalleryItem(id, item) {
-    const updated = gallery.map(g =>
-      g.id === id ? { ...g, title: item.title, url: item.url } : g
-    );
-    setGallery(updated);
-    localStorage.setItem('gallery', JSON.stringify(updated));
+  async function updateGalleryItem(id, item) {
+    const payload = toDB(item);
+    const { data, error } = await supabase.from('gallery').update(payload).eq('id', id).select();
+    if (error) { console.error('Update gallery error:', error); return; }
+    if (data) setGallery(prev => prev.map(g => g.id === id ? toApp(data[0]) : g));
   }
 
-  function deleteGalleryItem(id) {
-    const updated = gallery.filter(g => g.id !== id);
-    setGallery(updated);
-    localStorage.setItem('gallery', JSON.stringify(updated));
+  async function deleteGalleryItem(id) {
+    const { error } = await supabase.from('gallery').delete().eq('id', id);
+    if (error) { console.error('Delete gallery error:', error); return; }
+    setGallery(prev => prev.filter(g => g.id !== id));
   }
 
   // Page Backgrounds
-  function updatePageBg(pageId, imageUrl) {
-    const updated = { ...pageBgs, [pageId]: { ...pageBgs[pageId], image_url: imageUrl } };
-    setPageBgs(updated);
-    localStorage.setItem('pageBgs', JSON.stringify(updated));
+  async function updatePageBg(pageId, imageUrl) {
+    const { error } = await supabase.from('page_backgrounds')
+      .upsert({ page_id: pageId, image_url: imageUrl }, { onConflict: 'page_id' });
+    if (error) { console.error('Update page bg error:', error); return; }
+    setPageBgs(prev => ({ ...prev, [pageId]: { ...prev[pageId], image_url: imageUrl } }));
   }
 
-  function resetPageBg(pageId) {
-    const updated = { ...pageBgs, [pageId]: { ...pageBgs[pageId], image_url: null } };
-    setPageBgs(updated);
-    localStorage.setItem('pageBgs', JSON.stringify(updated));
+  async function resetPageBg(pageId) {
+    const { error } = await supabase.from('page_backgrounds').delete().eq('page_id', pageId);
+    if (error) { console.error('Reset page bg error:', error); return; }
+    setPageBgs(prev => ({ ...prev, [pageId]: { ...prev[pageId], image_url: null } }));
   }
 
   return (
@@ -225,7 +193,7 @@ export function AdminProvider({ children }) {
       blogPosts, addBlogPost, updateBlogPost, deleteBlogPost,
       gallery, addGalleryItem, updateGalleryItem, deleteGalleryItem,
       pageBgs, updatePageBg, resetPageBg,
-      availableAssets: AVAILABLE_ASSETS,
+      uploadImage, // Export uploadImage for use in Admin.jsx
     }}>
       {children}
     </AdminContext.Provider>

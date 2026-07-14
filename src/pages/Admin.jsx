@@ -2,12 +2,32 @@ import { useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import '../styles/Admin.css';
 
-// ─── Asset Picker Input ───────────────────────────────────────────────────────
+// ─── File Upload Input (Supabase) ───────────────────────────────────────────
 function ImageInput({ value, onChange, label = 'Image' }) {
-  const { availableAssets } = useAdmin();
-  const [showPicker, setShowPicker] = useState(false);
+  const { uploadImage } = useAdmin();
+  const [uploading, setUploading] = useState(false);
 
-  const getImagePath = (filename) => `/assets/${filename}`;
+  async function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (jpg, png, gif, etc.)');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      onChange(url);
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="form-group">
@@ -15,85 +35,23 @@ function ImageInput({ value, onChange, label = 'Image' }) {
       <div className="image-input-row">
         <input
           type="text"
-          placeholder="Paste image path or select from picker"
+          placeholder="Image URL (from Supabase)"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
+          disabled={uploading}
         />
         <span className="or-divider">or</span>
-        <button
-          type="button"
-          className="file-upload-btn"
-          onClick={() => setShowPicker(!showPicker)}
-        >
-          {showPicker ? 'Close Picker' : 'Pick Image'}
-        </button>
+        <label className="file-upload-btn" style={{ margin: 0, display: 'inline-block' }}>
+          {uploading ? 'Uploading…' : 'Upload Image'}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            disabled={uploading}
+            style={{ display: 'none' }}
+          />
+        </label>
       </div>
-
-      {showPicker && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-          gap: '1rem',
-          marginTop: '1rem',
-          padding: '1rem',
-          backgroundColor: '#f9f9f9',
-          borderRadius: '4px',
-          maxHeight: '400px',
-          overflowY: 'auto',
-        }}>
-          {availableAssets.map((asset) => (
-            <div
-              key={asset}
-              onClick={() => {
-                onChange(getImagePath(asset));
-                setShowPicker(false);
-              }}
-              style={{
-                cursor: 'pointer',
-                textAlign: 'center',
-                padding: '0.5rem',
-                borderRadius: '4px',
-                backgroundColor: value === getImagePath(asset) ? '#2a9d8f' : '#fff',
-                border: value === getImagePath(asset) ? '2px solid #1a7d6f' : '1px solid #ddd',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                if (value !== getImagePath(asset)) {
-                  e.currentTarget.style.backgroundColor = '#f0f0f0';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (value !== getImagePath(asset)) {
-                  e.currentTarget.style.backgroundColor = '#fff';
-                }
-              }}
-            >
-              <img
-                src={getImagePath(asset)}
-                alt={asset}
-                style={{
-                  width: '100%',
-                  height: '80px',
-                  objectFit: 'cover',
-                  borderRadius: '2px',
-                  marginBottom: '0.3rem',
-                }}
-              />
-              <span style={{
-                fontSize: '0.7rem',
-                display: 'block',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                color: value === getImagePath(asset) ? '#fff' : '#666',
-              }}>
-                {asset}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
       {value && <img src={value} alt="preview" className="image-preview" />}
     </div>
   );
@@ -392,16 +350,32 @@ function GalleryTab() {
 
 // ─── PAGE BACKGROUNDS TAB ────────────────────────────────────────────────────
 function PageBgsTab() {
-  const { pageBgs, updatePageBg, resetPageBg, availableAssets } = useAdmin();
+  const { pageBgs, updatePageBg, resetPageBg, uploadImage } = useAdmin();
   const [applied, setApplied] = useState({});
-  const [showPickers, setShowPickers] = useState({});
+  const [uploading, setUploading] = useState({});
 
-  const getImagePath = (filename) => `/assets/${filename}`;
+  async function handleFileSelect(pageId, e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  function handleImageSelect(pageId, imageUrl) {
-    updatePageBg(pageId, imageUrl);
-    setApplied((a) => ({ ...a, [pageId]: true }));
-    setTimeout(() => setApplied((a) => ({ ...a, [pageId]: false })), 3000);
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (jpg, png, gif, etc.)');
+      return;
+    }
+
+    setUploading((u) => ({ ...u, [pageId]: true }));
+    try {
+      const url = await uploadImage(file);
+      await updatePageBg(pageId, url);
+      setApplied((a) => ({ ...a, [pageId]: true }));
+      setTimeout(() => setApplied((a) => ({ ...a, [pageId]: false })), 3000);
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploading((u) => ({ ...u, [pageId]: false }));
+    }
   }
 
   return (
@@ -410,13 +384,15 @@ function PageBgsTab() {
         <h2>Page Backgrounds</h2>
       </div>
       <p style={{ color: '#666', marginTop: '-0.5rem' }}>
-        Select an image from your local assets to set the header background for each page. Changes save instantly.
+        Upload images to Supabase to set the header background for each page. Changes save instantly and persist across deployments.
       </p>
 
       <div className="pagebg-grid">
         {Object.entries(pageBgs).map(([pageId, row]) => {
           const image = row?.image_url || '';
           const label = row?.label || pageId;
+          const isUploading = uploading[pageId];
+          
           return (
             <div key={pageId} className="pagebg-card">
               <div
@@ -431,66 +407,26 @@ function PageBgsTab() {
               >
                 <span className="pagebg-label">{label}</span>
                 {applied[pageId] && <span className="pagebg-applied-badge">✓ Applied</span>}
+                {isUploading && <span className="pagebg-applied-badge" style={{ backgroundColor: '#f39c12' }}>⏳ Uploading…</span>}
               </div>
 
               <div className="pagebg-controls">
-                <button
-                  type="button"
-                  className="file-upload-btn"
-                  onClick={() => setShowPickers((s) => ({ ...s, [pageId]: !s[pageId] }))}
-                >
-                  {showPickers[pageId] ? 'Close Picker' : 'Pick Image'}
-                </button>
+                <label className="file-upload-btn" style={{ margin: 0 }}>
+                  {isUploading ? 'Uploading…' : 'Upload Image'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileSelect(pageId, e)}
+                    disabled={isUploading}
+                    style={{ display: 'none' }}
+                  />
+                </label>
                 <div className="pagebg-actions">
                   {image && (
-                    <button className="btn-cancel" onClick={() => resetPageBg(pageId)}>Reset</button>
+                    <button className="btn-cancel" onClick={() => resetPageBg(pageId)} disabled={isUploading}>Reset</button>
                   )}
                 </div>
               </div>
-
-              {showPickers[pageId] && (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-                  gap: '0.5rem',
-                  marginTop: '1rem',
-                  padding: '1rem',
-                  backgroundColor: '#f9f9f9',
-                  borderRadius: '4px',
-                  maxHeight: '300px',
-                  overflowY: 'auto',
-                }}>
-                  {availableAssets.map((asset) => (
-                    <div
-                      key={asset}
-                      onClick={() => {
-                        handleImageSelect(pageId, getImagePath(asset));
-                        setShowPickers((s) => ({ ...s, [pageId]: false }));
-                      }}
-                      style={{
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                        padding: '0.3rem',
-                        borderRadius: '4px',
-                        backgroundColor: image === getImagePath(asset) ? '#2a9d8f' : '#fff',
-                        border: image === getImagePath(asset) ? '2px solid #1a7d6f' : '1px solid #ddd',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      <img
-                        src={getImagePath(asset)}
-                        alt={asset}
-                        style={{
-                          width: '100%',
-                          height: '60px',
-                          objectFit: 'cover',
-                          borderRadius: '2px',
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           );
         })}
